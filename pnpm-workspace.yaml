@@ -5,6 +5,8 @@ packages:
 
 allowBuilds:
   esbuild: true
+  sharp: true
+  workerd: true
 
 overrides:
   'ajv@<6.15.0': 6.15.0

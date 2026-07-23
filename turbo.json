@@ -27,9 +27,10 @@
       "dependsOn": ["//#validate:check", "//#generate", "^build"],
       "outputs": ["dist/**"],
       "inputs": ["$TURBO_DEFAULT$", "src/generated/**"],
-      // Showcase reads BASE_PATH to set the Vite base for GitHub Pages;
-      // declared here so turbo passes it through and keys the cache on it.
-      "env": ["BASE_PATH"]
+      // Showcase reads BASE_PATH to set the Vite base for GitHub Pages, and
+      // the VITE_* vars configure the contribute route's submit endpoint.
+      // Declared here so turbo passes them through and keys the cache on them.
+      "env": ["BASE_PATH", "VITE_SUBMIT_ENDPOINT", "VITE_TURNSTILE_SITE_KEY"]
     },
     "typecheck": {
       "dependsOn": ["//#validate:check", "//#generate", "^build"],

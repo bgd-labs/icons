@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { Turnstile } from '@marsidev/react-turnstile'
 import { BackBar } from './BackBar'
 import { InlineCode } from './CodeBlock'
 import { checkSvg, hasError, suggestBrandColor } from './contribute-validate'
@@ -10,8 +11,15 @@ import { CONTRIBUTING_URL } from './links'
 // A normal, linked route — no secrecy. Opening a PR ships nothing; the
 // maintainer's review is the gate, exactly like GitHub's "edit this file → PR"
 // flow for any stranger. The submit endpoint stays public; its only real
-// concern is spam (junk PRs), handled by rate-limiting, not auth.
+// concern is spam (junk PRs), handled by Turnstile, not auth.
 export const ROUTE = 'contribute'
+
+// Client-side env (both are public by design): the submit endpoint and the
+// Turnstile site key. When unset the form still works — the endpoint stub
+// just reports that nothing is configured (local dev).
+const SUBMIT_ENDPOINT: string | undefined = import.meta.env.VITE_SUBMIT_ENDPOINT
+const TURNSTILE_SITE_KEY: string | undefined = import.meta.env
+  .VITE_TURNSTILE_SITE_KEY
 
 type AssetType = 'token' | 'chain' | 'brand'
 
@@ -128,8 +136,10 @@ export default function Contribute() {
   const [full, setFull] = useState<SvgSlot | null>(null)
   const [mono, setMono] = useState<SvgSlot | null>(null)
   const [brandColor, setBrandColor] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<string | null>(null)
+  const [prUrl, setPrUrl] = useState<string | null>(null)
 
   const fullChecks = useMemo(
     () => (full ? checkSvg(full.content, false) : []),
@@ -153,12 +163,14 @@ export default function Contribute() {
     mono &&
     !hasError(fullChecks) &&
     !hasError(monoChecks) &&
-    (type !== 'token' || symbol.trim())
+    (type !== 'token' || symbol.trim()) &&
+    (!TURNSTILE_SITE_KEY || turnstileToken)
 
   const submit = async () => {
     if (!ready || !full || !mono) return
     setSubmitting(true)
     setResult(null)
+    setPrUrl(null)
     const payload = {
       type,
       id: id.trim().toLowerCase(),
@@ -172,11 +184,12 @@ export default function Contribute() {
       brandColor: brandColor || undefined,
       fullSvg: full.content,
       monoSvg: mono.content,
+      turnstileToken: turnstileToken ?? undefined,
     }
     try {
-      // SUBMIT_ENDPOINT: the secret-holding function that re-validates and
-      // opens the PR via the GitHub App. Configured at deploy time.
-      const endpoint = import.meta.env.VITE_SUBMIT_ENDPOINT
+      // The submit endpoint (apps/contribute-worker) re-validates and opens
+      // the PR via the GitHub App. Configured at deploy time.
+      const endpoint = SUBMIT_ENDPOINT
       if (!endpoint) {
         setResult(
           'No submit endpoint configured yet — payload is ready though.',
@@ -190,11 +203,12 @@ export default function Contribute() {
         body: JSON.stringify(payload),
       })
       const json = await res.json()
-      setResult(
-        res.ok
-          ? `Submitted — PR opened: ${json.prUrl ?? '(see GitHub)'}`
-          : `Rejected: ${json.error ?? res.statusText}`,
-      )
+      if (res.ok) {
+        setResult('Submitted — PR opened:')
+        setPrUrl(json.prUrl ?? null)
+      } else {
+        setResult(`Rejected: ${json.error ?? res.statusText}`)
+      }
     } catch (e) {
       setResult(`Failed: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
@@ -363,16 +377,40 @@ export default function Contribute() {
               </section>
             </div>
 
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                className="bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded hover:bg-gray-700 transition-[background-color,scale] active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                disabled={!ready || submitting}
-                onClick={submit}
-              >
-                {submitting ? 'Submitting…' : 'Submit for review'}
-              </button>
-              {result && <p className="text-sm text-gray-500">{result}</p>}
+            <div className="flex flex-col gap-4">
+              {TURNSTILE_SITE_KEY && (
+                <Turnstile
+                  siteKey={TURNSTILE_SITE_KEY}
+                  onSuccess={setTurnstileToken}
+                  onError={() => setTurnstileToken(null)}
+                  onExpire={() => setTurnstileToken(null)}
+                />
+              )}
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  className="bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded hover:bg-gray-700 transition-[background-color,scale] active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  disabled={!ready || submitting}
+                  onClick={submit}
+                >
+                  {submitting ? 'Submitting…' : 'Submit for review'}
+                </button>
+                {result && (
+                  <p className="text-sm text-gray-500">
+                    {result}{' '}
+                    {prUrl && (
+                      <a
+                        href={prUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-gray-900 underline underline-offset-2 hover:text-gray-600"
+                      >
+                        {prUrl}
+                      </a>
+                    )}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

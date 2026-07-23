@@ -12,6 +12,7 @@
   "dependencies": {
     "@bgd-labs/icons": "workspace:*",
     "@bgd-labs/icons-react": "workspace:*",
+    "@marsidev/react-turnstile": "^1.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

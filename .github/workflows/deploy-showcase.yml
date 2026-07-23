@@ -37,12 +37,18 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Turbo builds core + react (codegen/validation included) before the
-      # showcase. BASE_PATH points assets at the project sub-path
-      # (https://<owner>.github.io/icons/).
+      # showcase. BASE_PATH is '/' because the site is served from the custom
+      # domain root (https://icons.bgdlabs.com/); bgd-labs.github.io/icons
+      # redirects there.
+      # The VITE_* vars wire the contribute route to its submit endpoint
+      # (apps/contribute-worker). Both are public client config kept in repo
+      # variables; unset = the form reports "no endpoint configured".
       - name: Build showcase
         run: pnpm build
         env:
-          BASE_PATH: /icons/
+          BASE_PATH: /
+          VITE_SUBMIT_ENDPOINT: ${{ vars.CONTRIBUTE_SUBMIT_ENDPOINT }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
 
       - uses: actions/configure-pages@v5
 
