@@ -104,8 +104,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc --noEmit",
-    "prepack": "pnpm build"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@bgd-labs/icons": "workspace:*",
