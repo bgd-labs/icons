@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        include:
+          - node-version: 22
+            full-checks: true
+          - node-version: 20
+            full-checks: false
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Restore turbo cache; falls back to lockfile-level prefix on cache miss.
+      - name: Cache turbo
+        uses: actions/cache@v5
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node${{ matrix.node-version }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node${{ matrix.node-version }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            turbo-${{ runner.os }}-node${{ matrix.node-version }}-
+
+      # One explicit build. It gates on the //#validate:check and //#generate
+      # turbo root tasks, so asset validation is covered here; subsequent
+      # steps reuse turbo cache hits instead of rebuilding.
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: pnpm exec vitest run
+
+      # Full checks run on the primary node version (22) only.
+      # Node 20 runs install + build + test above and stops here.
+
+      - name: Format
+        if: matrix.full-checks
+        run: pnpm format:check
+
+      - name: Lint
+        if: matrix.full-checks
+        run: pnpm lint
+
+      - name: Typecheck
+        if: matrix.full-checks
+        run: pnpm typecheck
+
+      - name: Size
+        if: matrix.full-checks
+        run: pnpm exec size-limit
+
+      - name: Package health
+        if: matrix.full-checks
+        run: pnpm check:package
+
+      # Consumer-side smoke checks against the built dist: node ESM import,
+      # node CJS require, SSR renderToString, and a Vite build asserting
+      # single-icon imports tree-shake (dist is already built above).
+      - name: Consumer fixtures
+        if: matrix.full-checks
+        run: pnpm check:consumers
+
+      - name: Audit
+        if: matrix.full-checks
+        run: pnpm run audit

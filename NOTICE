@@ -1,0 +1,33 @@
+@bgd-labs/icons — NOTICE
+
+Copyright (c) 2024-2026 BGD Labs
+
+This project's SOURCE CODE (the resolver, build pipeline, React components,
+metadata format, and supporting tooling) is licensed under the MIT License.
+See the LICENSE file.
+
+This license does NOT extend to the icon assets bundled in this repository.
+
+----------------------------------------------------------------------
+Icon assets / trademarks
+----------------------------------------------------------------------
+
+The SVG icons in `assets/` (and the components, strings, and data derived
+from them) depict logos, wordmarks, and other marks of tokens, blockchains,
+wallets, protocols, and companies. Those marks are the property of their
+respective owners. BGD Labs claims no ownership of them and grants no rights
+in them under the MIT License or otherwise.
+
+The icons are included solely to identify the corresponding asset or project
+(nominative use / interoperability) so that applications can render a
+recognizable icon for an asset a user already holds or is interacting with.
+Their inclusion does not imply any affiliation with, sponsorship by, or
+endorsement from the trademark holders.
+
+If you are a rights holder and want a mark added, changed, or removed, open
+an issue at https://github.com/bgd-labs/icons/issues and we will act on it
+promptly.
+
+Consumers of this library are responsible for ensuring their own use of any
+included mark complies with the relevant owner's trademark and brand
+guidelines.

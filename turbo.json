@@ -1,0 +1,44 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "//#validate:check": {
+      "inputs": [
+        "assets/**",
+        "scripts/**",
+        "packages/react/src/sanitize-svg.ts",
+        "packages/react/src/svg-attributes.ts",
+        "packages/core/src/internal/**"
+      ],
+      "outputs": []
+    },
+    "//#generate": {
+      "inputs": [
+        "assets/**",
+        "scripts/**",
+        "packages/react/src/sanitize-svg.ts",
+        // svg-to-jsx.ts bakes these attribute/style conversions into every
+        // generated component — a change here must be a cache miss.
+        "packages/react/src/svg-attributes.ts",
+        "packages/core/src/internal/**"
+      ],
+      "outputs": ["packages/*/src/generated/**"]
+    },
+    "build": {
+      "dependsOn": ["//#validate:check", "//#generate", "^build"],
+      "outputs": ["dist/**"],
+      "inputs": ["$TURBO_DEFAULT$", "src/generated/**"],
+      // Showcase reads BASE_PATH to set the Vite base for GitHub Pages;
+      // declared here so turbo passes it through and keys the cache on it.
+      "env": ["BASE_PATH"]
+    },
+    "typecheck": {
+      "dependsOn": ["//#validate:check", "//#generate", "^build"],
+      "outputs": [],
+      "inputs": ["$TURBO_DEFAULT$", "src/generated/**"]
+    },
+    "dev": {
+      "persistent": true,
+      "cache": false
+    }
+  }
+}

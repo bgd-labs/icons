@@ -1,0 +1,7 @@
+{
+  "symbol": "WETH",
+  "name": "Wrapped ETH",
+  "aliases": ["WETH.e"],
+  "brandColor": "#d83878",
+  "bundle": true
+}

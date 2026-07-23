@@ -1,0 +1,7 @@
+{
+  "symbol": "ETH",
+  "name": "Ether",
+  "aliases": ["ether"],
+  "brandColor": "#9391f7",
+  "bundle": true
+}

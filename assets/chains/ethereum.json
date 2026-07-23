@@ -1,0 +1,7 @@
+{
+  "name": "Ethereum",
+  "chainId": 1,
+  "brandColor": "#6281e3",
+  "bundle": true,
+  "aliases": [11155111]
+}

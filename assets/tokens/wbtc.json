@@ -1,0 +1,7 @@
+{
+  "symbol": "WBTC",
+  "name": "Wrapped BTC",
+  "aliases": ["WBTC.e"],
+  "brandColor": "#595563",
+  "bundle": true
+}

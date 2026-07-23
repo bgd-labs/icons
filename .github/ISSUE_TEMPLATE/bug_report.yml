@@ -1,0 +1,37 @@
+name: Bug report
+description: Report a problem with the library.
+title: '[bug]: '
+labels: ['bug']
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - '@bgd-labs/icons (core)'
+        - '@bgd-labs/icons-react'
+        - build / tooling
+        - not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version of the package?
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal code snippet or link that reproduces the issue.
+    validations:
+      required: false

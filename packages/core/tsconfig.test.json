@@ -1,0 +1,15 @@
+{
+  // Typecheck-only config for the test suite. It drops the emit-shaped
+  // settings (declaration/outDir/rootDir) from the base config so a test may
+  // import the generate-time encoder from scripts/ (which lives outside the
+  // package's rootDir). Tests are never built — tsup emits from explicit
+  // entries — so loosening these here costs nothing.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "rootDir": "../.."
+  },
+  "exclude": [],
+  "include": ["src/**/__tests__/**/*.ts", "src/**/__tests__/**/*.tsx"]
+}

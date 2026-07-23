@@ -1,0 +1,19 @@
+{
+  "name": "@bgd-labs/consumer-fixtures",
+  "version": "0.0.2",
+  "private": true,
+  "description": "Consumer-side smoke checks: ESM import, CJS require, SSR render, Vite tree-shaking. Plain node scripts (not vitest) so module resolution is exercised by the real runtimes, not a test framework's resolver.",
+  "type": "module",
+  "scripts": {
+    "check": "node esm-import.mjs && node cjs-require.cjs && node ssr.mjs && node tree-shake.mjs"
+  },
+  "dependencies": {
+    "@bgd-labs/icons": "workspace:*",
+    "@bgd-labs/icons-react": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
