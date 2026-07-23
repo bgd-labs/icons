@@ -4,6 +4,7 @@
   "commit": false,
   "fixed": [],
   "linked": [["@bgd-labs/icons", "@bgd-labs/icons-react"]],
+  "privatePackages": { "version": false, "tag": false },
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
