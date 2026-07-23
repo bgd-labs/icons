@@ -1,0 +1,7 @@
+{
+  "symbol": "USDC",
+  "name": "USD Coin",
+  "brandColor": "#3e73c2",
+  "aliases": ["USDC.e", "USDCe", "m.USDC", "mUSDC", "USDCn"],
+  "bundle": true
+}

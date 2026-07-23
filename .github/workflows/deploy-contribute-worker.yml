@@ -1,0 +1,44 @@
+name: Deploy contribute worker
+
+# Deploys the contribute submit endpoint (Cloudflare Worker). Runs when the
+# worker — or the shared modules it reuses from scripts/ — changes on main,
+# or on demand. Requires CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repo
+# secrets; see apps/contribute-worker/README.md for the full setup.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/contribute-worker/**'
+      - 'scripts/lib/**'
+      - 'scripts/svg-optimizer.ts'
+      - '.github/workflows/deploy-contribute-worker.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: contribute-worker
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/contribute-worker
+          command: deploy

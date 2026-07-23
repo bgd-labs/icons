@@ -1,0 +1,7 @@
+{
+  "name": "Fantom",
+  "chainId": 250,
+  "crossType": true,
+  "brandColor": "#1969ff",
+  "aliases": [4002]
+}

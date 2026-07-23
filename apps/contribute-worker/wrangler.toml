@@ -1,0 +1,25 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "bgd-icons-contribute"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+# svgo (used for validation-parity byte output) pulls node builtins.
+compatibility_flags = ["nodejs_compat"]
+
+# Custom domain on the bgdlabs.com zone (managed by Cloudflare); Wrangler
+# auto-creates the DNS record + cert on deploy. Must be a DIRECT subdomain of
+# bgdlabs.com: anything under icons.bgdlabs.com inherits GitHub's CAA (via the
+# CNAME to bgd-labs.github.io), which forbids Google Trust Services — the CA
+# Cloudflare uses for Workers certs. If this line is removed, the attachment
+# still needs an explicit API/dashboard delete (deploy doesn't detach).
+workers_dev = false
+routes = [{ pattern = "icons-contribute.bgdlabs.com", custom_domain = true }]
+
+# Non-secret config. Secrets (GitHub App credentials, Turnstile secret) are set
+# via `wrangler secret put` — see README.md for the full setup runbook.
+[vars]
+REPO_OWNER = "bgd-labs"
+REPO_NAME = "icons"
+# Comma-separated origins allowed to call the endpoint. The custom domain is
+# the production site (github.io kept for the redirect transition); localhost
+# is for `pnpm dev` in apps/showcase.
+ALLOWED_ORIGINS = "https://icons.bgdlabs.com,https://bgd-labs.github.io,http://localhost:5173"

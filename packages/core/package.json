@@ -1,0 +1,112 @@
+{
+  "name": "@bgd-labs/icons",
+  "version": "0.4.0",
+  "description": "Zero-dependency icon metadata, resolver, and SVG strings for web3 assets",
+  "type": "module",
+  "license": "MIT",
+  "author": "BGD Labs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bgd-labs/icons.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/bgd-labs/icons",
+  "bugs": {
+    "url": "https://github.com/bgd-labs/icons/issues"
+  },
+  "keywords": [
+    "BGD Labs",
+    "icons",
+    "SVG",
+    "web3",
+    "tokens",
+    "chains"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./resolve": {
+      "import": {
+        "types": "./dist/resolve.d.ts",
+        "default": "./dist/resolve.js"
+      },
+      "require": {
+        "types": "./dist/resolve.d.cts",
+        "default": "./dist/resolve.cjs"
+      }
+    },
+    "./svg": {
+      "import": {
+        "types": "./dist/svg.d.ts",
+        "default": "./dist/svg.js"
+      },
+      "require": {
+        "types": "./dist/svg.d.cts",
+        "default": "./dist/svg.cjs"
+      }
+    },
+    "./svg/tokens": {
+      "import": {
+        "types": "./dist/svg-tokens.d.ts",
+        "default": "./dist/svg-tokens.js"
+      },
+      "require": {
+        "types": "./dist/svg-tokens.d.cts",
+        "default": "./dist/svg-tokens.cjs"
+      }
+    },
+    "./svg/chains": {
+      "import": {
+        "types": "./dist/svg-chains.d.ts",
+        "default": "./dist/svg-chains.js"
+      },
+      "require": {
+        "types": "./dist/svg-chains.d.cts",
+        "default": "./dist/svg-chains.cjs"
+      }
+    },
+    "./svg/brands": {
+      "import": {
+        "types": "./dist/svg-brands.d.ts",
+        "default": "./dist/svg-brands.js"
+      },
+      "require": {
+        "types": "./dist/svg-brands.d.cts",
+        "default": "./dist/svg-brands.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "prepack": "pnpm build"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  }
+}

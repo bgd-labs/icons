@@ -1,0 +1,120 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  # Required for OIDC trusted publishing: lets the job mint the short-lived
+  # token that pnpm exchanges with npm for publish credentials.
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      # Drives the deploy-showcase job below. changesets/action sets this to
+      # 'true' only when it actually publishes new package versions.
+      published: ${{ steps.changesets.outputs.published }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      # Publishing uses npm trusted publishing (OIDC) — no NPM_TOKEN secret:
+      # pnpm >= 11 (see `packageManager`; pnpm 10 has no OIDC support)
+      # exchanges this job's OIDC token with npm for short-lived publish
+      # credentials and attaches provenance attestations automatically.
+      #
+      # Deliberately NO `registry-url` on setup-node: it would write an .npmrc
+      # whose `_authToken` references an unset NODE_AUTH_TOKEN, and pnpm sends
+      # that placeholder INSTEAD of doing the OIDC exchange — every publish
+      # fails. Any `_authToken` config shadows OIDC, so this job must stay
+      # token-free. (All deps are public; install needs no registry auth.)
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Restore turbo cache; falls back to lockfile-level prefix on cache miss.
+      - name: Cache turbo
+        uses: actions/cache@v6
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node22-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node22-${{ hashFiles('pnpm-lock.yaml') }}-
+            turbo-${{ runner.os }}-node22-
+
+      # One explicit build. It gates on the //#validate:check and //#generate
+      # turbo root tasks, so asset validation is covered here; subsequent
+      # steps reuse turbo cache hits instead of rebuilding.
+      - name: Build
+        run: pnpm build
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm exec vitest run
+
+      - name: Size
+        run: pnpm exec size-limit
+
+      - name: Package health
+        run: pnpm check:package
+
+      - name: Audit
+        run: pnpm run audit
+
+      - uses: changesets/action@v1
+        id: changesets
+        with:
+          # Use `pnpm run` so these resolve to the package scripts. Bare
+          # `pnpm version` hits pnpm's built-in version command, not the
+          # `changeset version` script, so no version bump ever happens.
+          # `pnpm run release` runs `pnpm build && changeset publish` so
+          # dist is always fresh at publish time.
+          publish: pnpm run release
+          version: pnpm run version
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+        env:
+          # NOTE: PRs created with GITHUB_TOKEN do not trigger the CI
+          # workflow — the "Version Packages" PR merges without checks; the
+          # steps above re-run everything on main before publishing.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No NPM_TOKEN/NODE_AUTH_TOKEN: `changeset publish` calls
+          # `pnpm publish`, which authenticates via OIDC trusted publishing
+          # (see the setup-node note above). The trusted publisher for each
+          # package is configured on npmjs.com as: repo bgd-labs/icons,
+          # workflow release.yml, action `npm publish`.
+
+  # Deploy the showcase to GitHub Pages whenever a release was published.
+  # This is chained off the release job (rather than an `on: release`
+  # workflow) because changesets creates the release/tags with GITHUB_TOKEN,
+  # and GITHUB_TOKEN events do not trigger separate workflow runs. The deploy
+  # itself lives in a reusable workflow so it can also be run on demand via
+  # workflow_dispatch.
+  deploy-showcase:
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-showcase.yml

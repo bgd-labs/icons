@@ -1,0 +1,60 @@
+name: Deploy showcase
+
+# Deploys the showcase to GitHub Pages. Triggered two ways:
+#  - workflow_dispatch: deploy on demand (e.g. the first deploy, or a docs fix)
+#  - workflow_call: chained from release.yml after a package publish
+on:
+  workflow_dispatch:
+  workflow_call:
+
+# Pages deploys must not run concurrently; let an in-flight deploy finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Turbo builds core + react (codegen/validation included) before the
+      # showcase. BASE_PATH is '/' because the site is served from the custom
+      # domain root (https://icons.bgdlabs.com/); bgd-labs.github.io/icons
+      # redirects there.
+      # The VITE_* vars wire the contribute route to its submit endpoint
+      # (apps/contribute-worker). Both are public client config kept in repo
+      # variables; unset = the form reports "no endpoint configured".
+      - name: Build showcase
+        run: pnpm build
+        env:
+          BASE_PATH: /
+          VITE_SUBMIT_ENDPOINT: ${{ vars.CONTRIBUTE_SUBMIT_ENDPOINT }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: apps/showcase/dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v5

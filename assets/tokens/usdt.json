@@ -1,0 +1,7 @@
+{
+  "symbol": "USDT",
+  "name": "Tether USDT",
+  "brandColor": "#509e7d",
+  "aliases": ["USDT.e", "m.USDT", "musdt"],
+  "bundle": true
+}

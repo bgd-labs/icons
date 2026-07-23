@@ -1,0 +1,9 @@
+node_modules/
+**/dist/
+.turbo/
+packages/core/src/generated/
+packages/react/src/generated/
+.stress/
+# Local secrets (wrangler dev vars, CF API token for manual deploys)
+**/.env
+**/.dev.vars

@@ -1,0 +1,13 @@
+version: 2
+# Deliberately NO npm version updates: the published packages have a ~1-dep
+# runtime surface (dompurify), CI runs `pnpm audit --prod` on every push, and
+# GitHub security alerts/updates are configured in repo settings independently
+# of this file. Dev-dep freshness is handled on demand (`pnpm outdated`,
+# `pnpm update -i --latest`) instead of weekly bot PRs that train us to
+# ignore the bot. Actions bumps stay: rare, low-risk, and actionable
+# (e.g. deprecation fixes).
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

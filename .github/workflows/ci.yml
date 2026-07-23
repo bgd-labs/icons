@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Restore turbo cache; falls back to lockfile-level prefix on cache miss.
+      - name: Cache turbo
+        uses: actions/cache@v6
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node22-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node22-${{ hashFiles('pnpm-lock.yaml') }}-
+            turbo-${{ runner.os }}-node22-
+
+      # One explicit build. It gates on the //#validate:check and //#generate
+      # turbo root tasks, so asset validation is covered here; subsequent
+      # steps reuse turbo cache hits instead of rebuilding.
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: pnpm exec vitest run
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Size
+        run: pnpm exec size-limit
+
+      - name: Package health
+        run: pnpm check:package
+
+      # Consumer-side smoke checks against the built dist: node ESM import,
+      # node CJS require, SSR renderToString, and a Vite build asserting
+      # single-icon imports tree-shake (dist is already built above).
+      - name: Consumer fixtures
+        run: pnpm check:consumers
+
+      - name: Audit
+        run: pnpm run audit

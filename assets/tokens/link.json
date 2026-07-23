@@ -1,0 +1,7 @@
+{
+  "symbol": "LINK",
+  "name": "ChainLink",
+  "brandColor": "#3659d1",
+  "aliases": ["link.e"],
+  "bundle": true
+}

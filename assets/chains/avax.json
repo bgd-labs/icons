@@ -1,0 +1,7 @@
+{
+  "name": "Avalanche",
+  "chainId": 43114,
+  "crossType": true,
+  "brandColor": "#e84142",
+  "aliases": [43113]
+}

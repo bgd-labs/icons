@@ -1,0 +1,125 @@
+{
+  "name": "@bgd-labs/icons-react",
+  "version": "0.4.0",
+  "description": "Tree-shakeable React icon components for web3 assets",
+  "type": "module",
+  "license": "MIT",
+  "author": "BGD Labs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bgd-labs/icons.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/bgd-labs/icons",
+  "bugs": {
+    "url": "https://github.com/bgd-labs/icons/issues"
+  },
+  "keywords": [
+    "BGD Labs",
+    "icons",
+    "SVG",
+    "web3",
+    "tokens",
+    "chains",
+    "react",
+    "components"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./tokens": {
+      "import": {
+        "types": "./dist/tokens.d.ts",
+        "default": "./dist/tokens.js"
+      },
+      "require": {
+        "types": "./dist/tokens.d.cts",
+        "default": "./dist/tokens.cjs"
+      }
+    },
+    "./chains": {
+      "import": {
+        "types": "./dist/chains.d.ts",
+        "default": "./dist/chains.js"
+      },
+      "require": {
+        "types": "./dist/chains.d.cts",
+        "default": "./dist/chains.cjs"
+      }
+    },
+    "./brands": {
+      "import": {
+        "types": "./dist/brands.d.ts",
+        "default": "./dist/brands.js"
+      },
+      "require": {
+        "types": "./dist/brands.d.cts",
+        "default": "./dist/brands.cjs"
+      }
+    },
+    "./frames": {
+      "import": {
+        "types": "./dist/frames.d.ts",
+        "default": "./dist/frames.js"
+      },
+      "require": {
+        "types": "./dist/frames.d.cts",
+        "default": "./dist/frames.cjs"
+      }
+    },
+    "./compat": {
+      "import": {
+        "types": "./dist/compat.d.ts",
+        "default": "./dist/compat.js"
+      },
+      "require": {
+        "types": "./dist/compat.d.cts",
+        "default": "./dist/compat.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "prepack": "pnpm build"
+  },
+  "dependencies": {
+    "@bgd-labs/icons": "workspace:*",
+    "dompurify": "^3.4.12"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.0.0",
+    "jsdom": "^28.0.0",
+    "react": "^19.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  }
+}

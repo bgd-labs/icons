@@ -1,0 +1,24 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+  - 'fixtures/*'
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+
+overrides:
+  'ajv@<6.15.0': 6.15.0
+  'brace-expansion@<1.1.13': 1.1.13
+  'brace-expansion@>=2.0.0 <2.0.3': 2.0.3
+  'flatted@<3.4.2': 3.4.2
+  'minimatch@<3.1.4': 3.1.4
+  'minimatch@>=9.0.0 <9.0.7': 9.0.9
+  'picomatch@<2.3.2': 2.3.2
+  'picomatch@>=4.0.0 <4.0.4': 4.0.4
+  'postcss@<8.5.10': 8.5.15
+  'rollup@>=4.0.0 <4.59.0': 4.61.0
+  'turbo@<=2.9.13': 2.9.14
+  'undici@<7.27.0': 7.27.0
+  'vite@<=6.4.1': 6.4.2

@@ -1,0 +1,43 @@
+name: Request an icon
+description: Ask for a token, chain, or brand icon to be added.
+title: '[icon]: '
+labels: ['icon request']
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - token
+        - chain
+        - brand
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Name / symbol
+      description: e.g. "USDC", "BNB Smart Chain", "MetaMask"
+    validations:
+      required: true
+  - type: input
+    id: identifier
+    attributes:
+      label: Identifier
+      description: Token contract address, chain id, or a link to the official brand assets.
+    validations:
+      required: false
+  - type: textarea
+    id: source
+    attributes:
+      label: Official logo source
+      description: Link to the official logo / brand kit, if you have one.
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?
+      description: Aliases that should resolve to it, cross-type collisions, etc.
+    validations:
+      required: false
