@@ -37,7 +37,7 @@ jobs:
       # that placeholder INSTEAD of doing the OIDC exchange — every publish
       # fails. Any `_authToken` config shadows OIDC, so this job must stay
       # token-free. (All deps are public; install needs no registry auth.)
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
