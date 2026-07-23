@@ -23,7 +23,7 @@ jobs:
       # 'true' only when it actually publishes new package versions.
       published: ${{ steps.changesets.outputs.published }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v6
 
