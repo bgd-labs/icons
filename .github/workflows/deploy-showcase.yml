@@ -50,7 +50,7 @@ jobs:
           VITE_SUBMIT_ENDPOINT: ${{ vars.CONTRIBUTE_SUBMIT_ENDPOINT }}
           VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v4
         with:
