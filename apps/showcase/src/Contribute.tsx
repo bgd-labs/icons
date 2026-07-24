@@ -220,8 +220,8 @@ export default function Contribute() {
     <main className="flex min-h-screen flex-col">
       <BackBar />
 
-      <div className="border-t border-gray-100 grow bg-gray-50/80">
-        <div className="container max-w-5xl border-x border-gray-100 mx-auto bg-white min-h-full">
+      <div className="border-t border-gray-100 grow bg-gray-50/80 flex flex-col">
+        <div className="container max-w-5xl border-x border-gray-100 mx-auto bg-white grow">
           <div className="max-w-3xl mx-auto px-7 py-12 flex flex-col gap-10">
             <header className="flex flex-col gap-2">
               <h1 className="text-3xl font-semibold text-gray-900">
