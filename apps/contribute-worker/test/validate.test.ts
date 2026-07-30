@@ -92,7 +92,7 @@ describe('buildContribution', () => {
       '{\n  "symbol": "USDC",\n  "name": "USD Coin",\n  "aliases": ["USDC.e"]\n}\n',
     )
     expect(files?.changeset).toBe(
-      "---\n'@bgd-labs/icons': minor\n'@bgd-labs/icons-react': minor\n---\n\nAdd USD Coin (USDC) token icon.\n",
+      "---\n'@bgd-labs/icons': patch\n'@bgd-labs/icons-react': patch\n---\n\nAdd USD Coin (USDC) token icon.\n",
     )
   })
 

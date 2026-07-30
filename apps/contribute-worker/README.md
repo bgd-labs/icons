@@ -21,7 +21,8 @@ gates the merge.
 
 Files committed per contribution: `assets/<type>s/<id>_full.svg`,
 `assets/<type>s/<id>_mono.svg`, `assets/<type>s/<id>.json`, and a
-`.changeset/contribute-<type>-<id>.md` (minor bump for both packages).
+`.changeset/contribute-<type>-<id>.md` (patch bump for both packages —
+new icons are catalogue additions, not API changes).
 
 ## One-time setup (~15 min, all browser + 4 CLI commands)
 
