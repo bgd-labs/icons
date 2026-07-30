@@ -1,6 +1,6 @@
 {
   "name": "@bgd-labs/icons",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Zero-dependency icon metadata, resolver, and SVG strings for web3 assets",
   "type": "module",
   "license": "MIT",
