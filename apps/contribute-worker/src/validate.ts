@@ -118,7 +118,8 @@ export function formatChangeset(p: ContributePayload): string {
     p.type === 'token'
       ? `Add ${p.name} (${p.symbol}) token icon.`
       : `Add ${p.name} ${p.type} icon.`
-  return `---\n'@bgd-labs/icons': minor\n'@bgd-labs/icons-react': minor\n---\n\n${summary}\n`
+  // New icons are catalogue additions, not API changes — release as patch.
+  return `---\n'@bgd-labs/icons': patch\n'@bgd-labs/icons-react': patch\n---\n\n${summary}\n`
 }
 
 export function buildContribution(p: ContributePayload): Contribution {
