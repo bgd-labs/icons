@@ -3,4 +3,4 @@
 '@bgd-labs/icons-react': minor
 ---
 
-Add MegaEth (MEGA) token icon.
+Add MegaETH (MEGA) token icon as `mega`, avoiding an ID collision with the `megaeth` chain.
