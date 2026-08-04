@@ -37,6 +37,77 @@ export function svgToJsx(svgString: string): string {
 }
 
 /**
+ * Rewrite SVG resource ids and their references into per-instance
+ * expressions. Input is JSX text from svgToJsx(); every id DEFINED in it
+ * (SVGO's prefixIds already made these unique per asset, but every rendered
+ * instance of the same asset still shares them) becomes `${uidVar}<id>`:
+ *
+ *   id="x"            ->  id={`${uid}x`}
+ *   attr="url(#x)"    ->  attr={`url(#${uid}x)`}   (all occurrences per value)
+ *   href="#x"         ->  href={`#${uid}x`}         (also xlinkHref)
+ *   style={{p: "url(#x)"}} -> style={{p: `url(#x-with-uid)`}}
+ *
+ * References to ids not defined in this SVG are left alone. Returns the
+ * rewritten JSX plus how many ids were parameterized, so callers can skip
+ * the useId() plumbing for the common id-free icon.
+ *
+ * Why this matters: id lookups for url(#...) are DOCUMENT-global and take
+ * the first match, so two mounted copies of one icon share resources — and
+ * when the first copy sits in a hidden subtree (a closed drawer, a
+ * display:none panel), every visible copy clips/paints to nothing.
+ */
+export function parameterizeIds(
+  jsx: string,
+  uidVar = 'uid',
+): { jsx: string; idCount: number } {
+  const ids = new Set<string>()
+  for (const match of jsx.matchAll(/\bid="([^"]+)"/g)) ids.add(match[1])
+  if (ids.size === 0) return { jsx, idCount: 0 }
+
+  const substituteRefs = (value: string): { value: string; hit: boolean } => {
+    let out = value
+    let hit = false
+    for (const id of ids) {
+      const ref = `url(#${id})`
+      if (out.includes(ref)) {
+        out = out.split(ref).join(`url(#\${${uidVar}}${id})`)
+        hit = true
+      }
+    }
+    return { value: out, hit }
+  }
+
+  // Attribute position: name="value". Style objects were already converted
+  // to `style={{...}}` by svgToJsx, so their string values never match here.
+  let out = jsx.replace(
+    /([a-zA-Z_][\w:.-]*)="([^"]*)"/g,
+    (match, name: string, value: string) => {
+      if (name === 'id' && ids.has(value)) {
+        return `id={\`\${${uidVar}}${value}\`}`
+      }
+      if (
+        (name === 'href' || name === 'xlinkHref') &&
+        value.startsWith('#') &&
+        ids.has(value.slice(1))
+      ) {
+        return `${name}={\`#\${${uidVar}}${value.slice(1)}\`}`
+      }
+      const { value: substituted, hit } = substituteRefs(value)
+      return hit ? `${name}={\`${substituted}\`}` : match
+    },
+  )
+
+  // Remaining quoted occurrences are style-object string values (attribute
+  // positions were consumed above): swap the string literal for a template.
+  out = out.replace(/"([^"]*url\(#[^"]*)"/g, (match, value: string) => {
+    const { value: substituted, hit } = substituteRefs(value)
+    return hit ? `\`${substituted}\`` : match
+  })
+
+  return { jsx: out, idCount: ids.size }
+}
+
+/**
  * Extract the inner content between <svg> and </svg> tags.
  */
 export function extractSvgInner(svgString: string): string {

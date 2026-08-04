@@ -77,3 +77,53 @@ describe('svgTextToReact', () => {
     expect(g?.querySelector('rect')).not.toBeNull()
   })
 })
+
+describe('svgTextToReact id prefixing', () => {
+  const svgWithIds = wrap(
+    '<g clip-path="url(#a_clip)"><rect width="32" height="32" fill="url(#a_grad)"/>' +
+      '<circle style="fill:url(#a_grad)" cx="16" cy="16" r="8"/></g>' +
+      '<defs><clipPath id="a_clip"><path d="M0 0h32v32H0z"/></clipPath>' +
+      '<linearGradient id="a_grad"/></defs>',
+  )
+
+  it('reports hasIds and rewrites ids and their references with the prefix', () => {
+    const content = svgTextToReact(svgWithIds, 'p1-')
+    expect(content?.hasIds).toBe(true)
+    const { container } = render(
+      <svg viewBox={content!.viewBox}>{content!.node}</svg>,
+    )
+    expect(container.querySelector('clipPath')?.id).toBe('p1-a_clip')
+    expect(container.querySelector('linearGradient')?.id).toBe('p1-a_grad')
+    expect(container.querySelector('g')?.getAttribute('clip-path')).toBe(
+      'url(#p1-a_clip)',
+    )
+    expect(container.querySelector('rect')?.getAttribute('fill')).toBe(
+      'url(#p1-a_grad)',
+    )
+    expect(
+      (container.querySelector('circle') as SVGElement).style.fill,
+    ).toContain('url(#p1-a_grad')
+  })
+
+  it('leaves references to undefined ids and plain color values alone', () => {
+    const content = svgTextToReact(
+      wrap(
+        '<rect fill="#fff" filter="url(#external)" width="32" height="32"/>' +
+          '<defs><clipPath id="own"><path d="M0 0h1v1H0z"/></clipPath></defs>',
+      ),
+      'p2-',
+    )
+    const { container } = render(
+      <svg viewBox={content!.viewBox}>{content!.node}</svg>,
+    )
+    const rect = container.querySelector('rect')
+    expect(rect?.getAttribute('fill')).toBe('#fff')
+    expect(rect?.getAttribute('filter')).toBe('url(#external)')
+    expect(container.querySelector('clipPath')?.id).toBe('p2-own')
+  })
+
+  it('reports hasIds false for id-free SVGs', () => {
+    const content = svgTextToReact(wrap('<circle cx="16" cy="16" r="8"/>'))
+    expect(content?.hasIds).toBe(false)
+  })
+})
