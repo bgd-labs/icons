@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import type { ReactNode, SVGProps } from 'react'
 import { resolve } from '@bgd-labs/icons/resolve'
 import { useIconConfig } from './icon-provider'
@@ -10,7 +10,9 @@ import type { IconType } from './types'
 // `content` memoises the converted React description so repeated mounts of
 // the same fallback icon reuse one sanitize/parse pass instead of re-running
 // it per instance. React elements are immutable, so sharing one
-// SvgReactContent across many component instances is safe.
+// SvgReactContent across many component instances is safe — but ONLY for
+// id-free SVGs: converted content that defines resource ids carries one
+// instance's id prefix and is never cached (see cachedContentFor).
 interface CacheEntry {
   value: string | null
   ts: number
@@ -54,12 +56,19 @@ function cacheSet(url: string, value: string | null) {
 
 // Memoise the converted content on a positive cache entry. Only non-null
 // conversions are stored (SSR returns null when DOMParser is missing — never
-// cache that). Returns the converted content, or null when unconvertible.
-function cachedContentFor(url: string, text: string): SvgReactContent | null {
+// cache that), and only when the SVG defines no resource ids: ids get the
+// caller's per-instance prefix baked in, so that conversion belongs to one
+// mount and each instance converts its own copy. Returns the converted
+// content, or null when unconvertible.
+function cachedContentFor(
+  url: string,
+  text: string,
+  idPrefix: string,
+): SvgReactContent | null {
   const entry = svgCache.get(url)
   if (entry && entry.content) return entry.content
-  const content = svgTextToReact(text)
-  if (content && entry) entry.content = content
+  const content = svgTextToReact(text, idPrefix)
+  if (content && entry && !content.hasIds) entry.content = content
   return content
 }
 
@@ -189,11 +198,14 @@ function getCachedContent(
   type: AssetType | null,
   id: string,
   variant: string,
+  idPrefix: string,
 ): SvgReactContent | null {
   if (!type) return null
   const url = buildUrl(baseUrl, branch, type, id, variant)
   const cached = cacheGet(url)
-  return typeof cached === 'string' ? cachedContentFor(url, cached) : null
+  return typeof cached === 'string'
+    ? cachedContentFor(url, cached, idPrefix)
+    : null
 }
 
 export function GithubFallback({
@@ -207,14 +219,18 @@ export function GithubFallback({
 }: GithubFallbackProps) {
   const variant = mono ? 'mono' : 'full'
   const { baseUrl, branch } = useIconConfig()
+  // Per-instance prefix for the SVG's resource ids: without it two mounts
+  // of the same fetched SVG collide on document-global url(#...) lookups.
+  // The sanitize strips React's useId delimiters, unsafe in CSS url() tokens.
+  const idPrefix = useId().replace(/[^a-zA-Z0-9_-]/g, '')
   // Resolve the asset type once per render (pure, cheap-ish lookup) and
   // thread it through both the cache-read and the fetch path so core
   // `resolve` runs at most once.
   const type = inferType(id, iconType)
   const requestKey = `${baseUrl}|${branch}|${iconType ?? 'auto'}|${id}|${variant}`
   const cachedContent = useMemo(
-    () => getCachedContent(baseUrl, branch, type, id, variant),
-    [baseUrl, branch, type, id, variant],
+    () => getCachedContent(baseUrl, branch, type, id, variant, idPrefix),
+    [baseUrl, branch, type, id, variant, idPrefix],
   )
   const [state, setState] = useState<FallbackState>(() => ({
     key: requestKey,
@@ -241,10 +257,11 @@ export function GithubFallback({
         return
       }
       // Convert once and memoise on the cache entry so other mounts of the
-      // same URL reuse it. A null conversion (unparseable text) is
-      // negative-cached so other mounts don't re-attempt the parse;
-      // transient network misses never reach here (resolved is null).
-      const content = cachedContentFor(resolved.url, resolved.text)
+      // same URL reuse it (id-free SVGs only — see cachedContentFor). A null
+      // conversion (unparseable text) is negative-cached so other mounts
+      // don't re-attempt the parse; transient network misses never reach
+      // here (resolved is null).
+      const content = cachedContentFor(resolved.url, resolved.text, idPrefix)
       if (!content) cacheSet(resolved.url, null)
       setState({
         key: requestKey,
@@ -262,6 +279,7 @@ export function GithubFallback({
     currentState.failed,
     currentState.content,
     id,
+    idPrefix,
     requestKey,
     type,
     variant,
