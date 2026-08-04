@@ -1,6 +1,6 @@
 {
   "name": "@bgd-labs/icons-react",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Tree-shakeable React icon components for web3 assets",
   "type": "module",
   "license": "MIT",
