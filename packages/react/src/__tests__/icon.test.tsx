@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { createRef } from 'react'
 import { Icon, IconProvider } from '../index'
 import { __resetShownIcons } from '../lazy-icons'
@@ -43,9 +50,8 @@ describe('Icon', () => {
   })
 
   it('rejects ref on <Icon> at the type level', () => {
-    // <Icon> renders different root elements depending on the internal
-    // path (eager svg / lazy wrapper / fallback), so a ref has no reliable
-    // target — the prop is omitted from IconProps on purpose.
+    // The root is a span and the inner SVG may be replaced by a custom
+    // fallback, so IconProps deliberately rejects an SVG ref.
     const ref = createRef<SVGSVGElement>()
     // @ts-expect-error — ref is intentionally unsupported on <Icon>
     const el = <Icon value="eth" ref={ref} />
@@ -74,6 +80,32 @@ describe('Icon', () => {
     const svg = container.querySelector('svg[aria-label="nonexistentxyz999"]')
     expect(svg).not.toBeNull()
   })
+
+  it.each([false, true])(
+    'preserves unknown-icon props with network fallback %s',
+    (enableFallback) => {
+      const onClick = vi.fn()
+      const { container } = render(
+        <IconProvider enableFallback={enableFallback}>
+          <Icon
+            value="not-shipped"
+            id="custom-id"
+            aria-hidden="true"
+            aria-label="Custom label"
+            data-testid="unknown"
+            onClick={onClick}
+          />
+        </IconProvider>,
+      )
+      const svg = container.querySelector('svg')!
+      expect(svg.getAttribute('aria-hidden')).toBe('true')
+      expect(svg.getAttribute('aria-label')).toBe('Custom label')
+      expect(svg.id).toBe('custom-id')
+      expect(svg.getAttribute('data-testid')).toBe('unknown')
+      fireEvent.click(svg)
+      expect(onClick).toHaveBeenCalledOnce()
+    },
+  )
 
   it('fades the placeholder out once a lazy icon loads (no peek-through under mono)', async () => {
     const { container } = render(<Icon value="mkr" mono />)

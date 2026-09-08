@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Turnstile } from '@marsidev/react-turnstile'
+import type { TurnstileInstance } from '@marsidev/react-turnstile'
 import { BackBar } from './BackBar'
 import { InlineCode } from './CodeBlock'
 import { checkSvg, hasError, suggestBrandColor } from './contribute-validate'
@@ -137,6 +138,7 @@ export default function Contribute() {
   const [mono, setMono] = useState<SvgSlot | null>(null)
   const [brandColor, setBrandColor] = useState('')
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstile = useRef<TurnstileInstance>(undefined)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [prUrl, setPrUrl] = useState<string | null>(null)
@@ -212,6 +214,8 @@ export default function Contribute() {
     } catch (e) {
       setResult(`Failed: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
+      setTurnstileToken(null)
+      turnstile.current?.reset()
       setSubmitting(false)
     }
   }
@@ -380,6 +384,7 @@ export default function Contribute() {
             <div className="flex flex-col gap-4">
               {TURNSTILE_SITE_KEY && (
                 <Turnstile
+                  ref={turnstile}
                   siteKey={TURNSTILE_SITE_KEY}
                   onSuccess={setTurnstileToken}
                   onError={() => setTurnstileToken(null)}
