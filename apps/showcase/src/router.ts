@@ -16,7 +16,11 @@ export function parseHash(hash: string): Route {
   const parts = path.split('/').filter(Boolean)
 
   if (parts[0] === 'icon' && parts[1] && parts[2]) {
-    return { name: 'icon', type: parts[1], id: decodeURIComponent(parts[2]) }
+    try {
+      return { name: 'icon', type: parts[1], id: decodeURIComponent(parts[2]) }
+    } catch {
+      return { name: 'gallery' }
+    }
   }
   if (parts[0] === 'docs') return { name: 'docs' }
   if (parts[0] === 'contribute') return { name: 'contribute' }

@@ -35,11 +35,16 @@ import { Icon } from '@bgd-labs/icons-react'
 | `size`     | `number \| string`              | `32`        | Width and height                             |
 | `fallback` | `ReactNode`                     | placeholder | Rendered while loading or when unknown       |
 
-Plus all standard `SVGProps<SVGSVGElement>` — except `ref`: `<Icon>` renders
-different root elements depending on the internal path (eager, lazy,
-fallback), so a ref has no reliable target and is rejected at the type
-level. The [direct-import components](#direct-imports) render a single
-`<svg>` root and forward refs properly.
+`<Icon>` always renders a `<span>` wrapper. `className` and `style` apply to
+that wrapper; use `size` to set the glyph's width and height. Other standard
+SVG props, including event handlers and accessibility attributes, apply to
+the glyph SVG or the default unknown-icon placeholder. A custom `fallback`
+renders as supplied, so provide its own handlers and accessibility props.
+
+`ref` is rejected at the type level because the inner SVG can be replaced
+by a placeholder or custom fallback. The
+[direct-import components](#direct-imports) render a single `<svg>` root,
+accept styling directly on that SVG, and forward refs.
 
 ## IconProvider
 

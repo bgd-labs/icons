@@ -66,6 +66,11 @@ pnpm wrangler secret put TURNSTILE_SECRET_KEY      # Turnstile SECRET key
 Then `pnpm run deploy` (or let the `Deploy contribute worker` GitHub workflow
 do it — see step 4).
 
+The private key can be GitHub's downloaded PKCS#1 PEM (`BEGIN RSA PRIVATE KEY`)
+or an unencrypted PKCS#8 PEM (`BEGIN PRIVATE KEY`). The Worker converts
+PKCS#1 for Web Crypto automatically. Preserve the entire PEM, including its
+header and footer; actual newlines and literal `\n` escapes are both accepted.
+
 ### 4. GitHub repo configuration
 
 On `bgd-labs/icons` → Settings:
@@ -101,6 +106,11 @@ parsing, the SVG pipeline (SVGO prefixing, mono-color auto-fix, viewBox /
 forbidden-content / href rules), and prettier-compatible metadata formatting.
 
 ## Notes
+
+- If PR creation fails after the branch is created, submit the same files
+  again. The Worker verifies their contents and opens the missing PR, or
+  returns its URL if it is already open. Different files or an already
+  reviewed contribution produce a conflict without changing the branch.
 
 - `wrangler.toml` `[vars]` holds non-secret config: target repo and the CORS
   allowlist (`ALLOWED_ORIGINS`).

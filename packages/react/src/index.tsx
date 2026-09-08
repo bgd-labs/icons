@@ -18,10 +18,9 @@ export type { IconContextValue } from './icon-provider'
 
 // `type` shadows the inherited `SVGProps['type']` HTML attribute, which we
 // never expose anyway. Omitting it makes the prop unambiguously `IconType`.
-// `ref` is omitted because <Icon> renders different root elements depending
-// on the internal path (eager svg, lazy wrapper, fallback) — there is no
-// single element a ref could reliably target, so accepting one would be a
-// silent no-op. The generated per-icon components forward refs properly.
+// `ref` is omitted because the root is a span, and the inner SVG can be
+// replaced by a placeholder or a custom fallback. Generated per-icon
+// components forward refs to their stable SVG root.
 export interface IconProps extends Omit<
   SVGProps<SVGSVGElement>,
   'type' | 'ref'
@@ -49,12 +48,13 @@ function ensureStyles() {
 }
 
 function Placeholder({
-  id,
+  iconId: id,
   type,
   size = 32,
   decorative = false,
-}: {
-  id: string
+  ...props
+}: Omit<SVGProps<SVGSVGElement>, 'type' | 'ref'> & {
+  iconId: string
   type?: IconType
   size?: number | string
   decorative?: boolean
@@ -71,6 +71,7 @@ function Placeholder({
       {...(decorative
         ? { 'aria-hidden': true, focusable: false }
         : { role: 'img', 'aria-label': meta?.name ?? id })}
+      {...props}
     >
       <circle cx="16" cy="16" r="16" fill={color} opacity={0.25} />
       <text
@@ -90,7 +91,7 @@ function Placeholder({
 }
 
 // Every <Icon> render path returns the same root element: a <span> that
-// carries the caller's className/style/handlers, wrapping the glyph svg. One
+// carries the caller's className/style, wrapping the glyph svg. One
 // root for eager and lazy means the public DOM contract doesn't depend on
 // whether an asset happens to be bundled. The svg stays pixel-sized (the
 // Safari frame-clip fix forbids a percentage-sized inner svg), so `size` — not
@@ -260,7 +261,7 @@ export function Icon({
         placeholder={
           fallback ?? (
             <Placeholder
-              id={id}
+              iconId={id}
               type={placeholderType}
               size={size}
               decorative
@@ -282,7 +283,12 @@ export function Icon({
   }
   if (enableFallback) {
     const placeholder = fallback ?? (
-      <Placeholder id={id} type={placeholderType} size={size} />
+      <Placeholder
+        {...glyphProps}
+        iconId={id}
+        type={placeholderType}
+        size={size}
+      />
     )
     return (
       <span className={className} style={boxStyle(size, style)}>
@@ -302,7 +308,14 @@ export function Icon({
   }
   return (
     <span className={className} style={boxStyle(size, style)}>
-      {fallback ?? <Placeholder id={id} type={placeholderType} size={size} />}
+      {fallback ?? (
+        <Placeholder
+          {...glyphProps}
+          iconId={id}
+          type={placeholderType}
+          size={size}
+        />
+      )}
     </span>
   )
 }

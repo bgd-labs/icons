@@ -38,7 +38,43 @@ function pemToDer(pem: string): ArrayBuffer {
   const bin = atob(body)
   const bytes = new Uint8Array(bin.length)
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-  return bytes.buffer
+  if (!pem.includes('-----BEGIN RSA PRIVATE KEY-----')) return bytes.buffer
+
+  // GitHub downloads PKCS#1. Web Crypto accepts PKCS#8, whose payload is
+  // the unchanged RSA key inside a PrivateKeyInfo sequence.
+  const der = (tag: number, value: Uint8Array): Uint8Array => {
+    const length: number[] = []
+    for (let n = value.length; n > 0; n >>>= 8) length.unshift(n & 255)
+    const encodedLength =
+      value.length < 128 ? [value.length] : [0x80 | length.length, ...length]
+    return new Uint8Array([tag, ...encodedLength, ...value])
+  }
+  return new Uint8Array(
+    der(
+      0x30,
+      new Uint8Array([
+        0x02,
+        0x01,
+        0x00, // version 0
+        0x30,
+        0x0d,
+        0x06,
+        0x09,
+        0x2a,
+        0x86,
+        0x48,
+        0x86,
+        0xf7,
+        0x0d,
+        0x01,
+        0x01,
+        0x01,
+        0x05,
+        0x00, // rsaEncryption + NULL
+        ...der(0x04, bytes),
+      ]),
+    ),
+  ).buffer
 }
 
 // RS256 JWT for GitHub App authentication (10 min expiry, per docs).
@@ -197,11 +233,55 @@ export async function openPr(input: PrInput, token: string): Promise<string> {
     })
   } catch (e) {
     if (e instanceof GitHubError && e.status === 422) {
-      throw new ConflictError(
-        'A contribution for this id is already pending review',
+      // A previous request may have committed the files but failed before
+      // opening its PR. Never overwrite that branch or publish it under a
+      // different submission: recover only when every file matches.
+      const existingRef = await gh<unknown>(
+        token,
+        'GET',
+        `/repos/${owner}/${repo}/git/ref/heads/${input.branch}`,
+        undefined,
+        true,
       )
+      if (!existingRef) throw e
+      const prs = await gh<{ html_url: string; state: string }[]>(
+        token,
+        'GET',
+        `/repos/${owner}/${repo}/pulls?state=all&head=${encodeURIComponent(`${owner}:${input.branch}`)}&base=main`,
+      )
+      for (const file of input.files) {
+        const existing = await gh<{ content?: string; encoding?: string }>(
+          token,
+          'GET',
+          `/repos/${owner}/${repo}/contents/${file.path}?ref=${encodeURIComponent(input.branch)}`,
+          undefined,
+          true,
+        )
+        const content =
+          existing?.encoding === 'base64' && existing.content
+            ? new TextDecoder().decode(
+                Uint8Array.from(
+                  atob(existing.content.replace(/\s/g, '')),
+                  (c) => c.charCodeAt(0),
+                ),
+              )
+            : undefined
+        if (content !== file.content) {
+          throw new ConflictError(
+            'A different contribution for this id already exists',
+          )
+        }
+      }
+      const open = prs.find((pr) => pr.state === 'open')
+      if (open) return open.html_url
+      if (prs.length > 0) {
+        throw new ConflictError(
+          'A contribution for this id was already reviewed — open an issue to request changes',
+        )
+      }
+    } else {
+      throw e
     }
-    throw e
   }
 
   const pr = await gh<{ html_url: string }>(
