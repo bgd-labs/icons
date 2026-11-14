@@ -108,7 +108,7 @@
   },
   "dependencies": {
     "@bgd-labs/icons": "workspace:*",
-    "dompurify": "^3.4.15"
+    "dompurify": "^3.4.17"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
