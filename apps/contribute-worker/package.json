@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "svgo": "^4.0.2"
+    "svgo": "^4.1.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
