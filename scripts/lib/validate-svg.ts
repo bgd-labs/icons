@@ -19,6 +19,7 @@ import {
   checkNoEmbeddedContent,
   checkViewBox,
 } from './svg-checks.ts'
+import { checkBackingDiscHidden } from './backing-disc.ts'
 import { optimizeSvg } from '../svg-optimizer.ts'
 import { sanitizeSvgRoot } from '../../packages/react/src/sanitize-svg.ts'
 
@@ -217,7 +218,10 @@ export function validateSvgFile(
     // from the check's expectations by syntax pass, then get normalised by
     // SVGO and shipped by generate before the next validate run caught it.
     if (isMono) content = checkMonoCurrentColor(content, svgPath, r)
-    else content = checkFullCanvasBackground(content, svgPath, r)
+    else {
+      content = checkFullCanvasBackground(content, svgPath, r)
+      checkBackingDiscHidden(content, svgPath, r)
+    }
   } catch (e: unknown) {
     r.errors.push({
       file: svgPath,
