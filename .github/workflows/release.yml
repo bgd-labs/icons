@@ -81,7 +81,7 @@ jobs:
       - name: Audit
         run: pnpm run audit
 
-      - uses: changesets/action@v1
+      - uses: changesets/action@v2
         id: changesets
         with:
           # Use `pnpm run` so these resolve to the package scripts. Bare
