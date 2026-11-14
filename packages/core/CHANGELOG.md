@@ -1,5 +1,11 @@
 # @bgd-labs/icons
 
+## 0.6.3
+
+### Patch Changes
+
+- 86cc0f2: Remove the white backing disc from the WETH, WBTC, renFIL and MetaMask full icons, where it showed as white slivers or a plate around non-round artwork on dark backgrounds.
+
 ## 0.6.1
 
 ### Patch Changes
